@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.friday.friday.dao.PermissionDao">
+
+    <update id="update">
+        update sys_permission set parentId = #{sysPermission.parentId},name = #{sysPermission.name},
+        css = #{sysPermission.css},href = #{sysPermission.href},type = #{sysPermission.type},
+        permission = #{sysPermission.permission},sort = #{sysPermission.sort}
+        where id = #{sysPermission.id}
+    </update>
+
+
+
+</mapper>

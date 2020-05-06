@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html class="x-admin-sm" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <title>角色列表</title>
+        <header th:replace="header::html"></header>
+    </head>
+    <body>
+        <div class="x-nav">
+          <span class="layui-breadcrumb">
+            <a href="">首页</a>
+            <a href="">角色</a>
+            <a>
+                <cite>角色列表</cite></a>
+          </span>
+          <a class="layui-btn layui-btn-small" style="line-height:1.6em;margin-top:3px;float:right" onclick="location.reload()" title="刷新">
+            <i class="layui-icon layui-icon-refresh" style="line-height:30px"></i></a>
+        </div>
+        <div class="layui-fluid">
+            <div class="layui-row  layui-col-space15">
+                <div class="layui-col-md12">
+                    <div class="layui-card">
+                        <div class="layui-card-body ">
+                            <form class="layui-form  layui-col-space5">
+                                <div class="layui-inline layui-show-xs-block">
+                                    <input type="text" name="rolename"  placeholder="请输入角色名" autocomplete="off" class="layui-input">
+                                </div>
+                                <div class="layui-inline layui-show-xs-block">
+                                    <button class="layui-btn"  lay-submit="" lay-filter="search"><i class="layui-icon">&#xe615;</i></button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="layui-card-header">
+                            <button class="layui-btn layui-btn-danger" onclick="delAll()" permission="sys:user:del"><i class="layui-icon"></i>批量删除</button>
+                            <button class="layui-btn" onclick="xadmin.open('新增角色','/role/add')" permission="sys:user:add"><i class="layui-icon"></i>添加</button>
+                        </div>
+
+                        <div class="layui-card-body ">
+                            <table class="layui-hide" id="table" lay-filter="member"></table>
+                        </div>
+
+                        <div class="layui-card-body ">
+                            <script type="text/html" id="barDemo">
+                                <a class="layui-btn layui-btn-xs" lay-event="edit" permission="sys:user:edit">编辑</a>
+                                <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del" permission="sys:user:del">删除</a>
+                            </script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </body>
+
+    <script>
+        //创建表格
+        layui.use('table', function(){
+            var table = layui.table;
+            var form = layui.form;
+            //第一个实例
+            table.render({
+                elem: '#table'
+                ,url: '/role/list' //数据接口
+                /*,toolbar: '#toolbarDemo' //开启头部工具栏，并为其绑定左侧模板*/
+                ,page: true //开启分页
+                ,response: {
+                   dataName: 'datas' //规定数据列表的字段名称，默认：data
+                }
+                ,cols: [
+                    [ //表头
+                        //开启全选框
+                     {type:'checkbox',fixed:'left'}
+                    ,{field: 'id', title: 'ID',sort: true,align:'center', fixed: 'left',templet:function (d) {
+                        return d.LAY_TABLE_INDEX + 1
+                        }}
+                    ,{field: 'name', title: '角色名',align:'center'}
+                    ,{field:'description',title:'描述',align:'center'}
+                    ,{field:'updateTime',title:'最后操作时间',align:'center'}
+                    ,{fixed: 'right', title:'操作', toolbar: '#barDemo'}
+
+                    ]
+                ]
+            });
+            //监听工具条
+            table.on('tool(member)',function (obj) {
+                var data = obj.data;
+                if(obj.event === 'del'){
+                    layer.confirm('真的删除行吗',function (index) {
+                        $.ajax({
+                            url:"/role/delete",
+                            type:"GET",
+                            data:{id:data.id},
+                            datatype:"json",
+                            success:function (result) {
+                                if(result.code == 200){
+                                    layer.alert("删除成功",{icon:1},function (index1) {
+                                        layer.close(index1)
+                                        //刷新整个页面
+                                        //xadmin.father_reload();
+                                        //刷新当前页
+                                        table.reload('table');
+                                    });
+                                }else{
+                                    layer.alert(result.msg);
+                                }
+
+                            },
+                        });
+                    });
+                }else if(obj.event === 'edit'){
+                    xadmin.open('编辑角色信息','/role/edit/?id='+data.id);
+                }
+            });
+
+            /*table.on('checkbox(member)', function(obj){
+                var checkStatus = table.checkStatus('idTest')
+                var data = checkStatus.data;
+                for(i in data){
+                    layer.alert(data[i].username)
+                }
+
+            });*/
+
+            //监听提交
+            form.on('submit(search)',function (data){
+                var rolename = data.field.rolename;
+                table.render({
+                    elem: '#table'
+                    ,url: '/role/findRoleByFuzzyRolename' //数据接口
+                    /*,toolbar: '#toolbarDemo' //开启头部工具栏，并为其绑定左侧模板*/
+                    ,page: true //开启分页
+                    ,where:{
+                        'roleName':rolename
+                    }
+                    ,response: {
+
+                        dataName: 'datas' //规定数据列表的字段名称，默认：data
+                    }
+                    ,cols: [
+                        [ //表头
+                            //开启全选框
+                            {type:'checkbox',fixed:'left'}
+                            ,{field: 'id', title: 'ID',sort: true,align:'center', fixed: 'left',templet:function (d) {
+                                return d.LAY_TABLE_INDEX + 1
+                            }}
+                            ,{field: 'name', title: '角色名',align:'center'}
+                            ,{field:'description',title:'描述',align:'center'}
+                            ,{field:'updateTime',title:'最后操作时间',align:'center'}
+                            ,{fixed: 'right', title:'操作', toolbar: '#barDemo'}
+
+                        ]
+                    ]
+                });
+                return false;
+
+            })
+
+
+        });
+
+    </script>
+
+    <script>
+
+        var _hmt = _hmt || []; (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?b393d153aeb26b46e9431fabaf0f6190";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+</html>
